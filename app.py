@@ -296,6 +296,27 @@ def mixed_pdf():
         return jsonify(error=f"Could not combine files: {error}"), 400
 
 
+@app.get("/robots.txt")
+def robots_txt():
+    root = request.url_root.rstrip("/")
+    return app.response_class(
+        f"User-agent: *\nAllow: /\nSitemap: {root}/sitemap.xml\n",
+        mimetype="text/plain",
+    )
+
+
+@app.get("/sitemap.xml")
+def sitemap_xml():
+    root = request.url_root.rstrip("/")
+    xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f"  <url><loc>{root}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n"
+        "</urlset>\n"
+    )
+    return app.response_class(xml, mimetype="application/xml")
+
+
 @app.get("/api/download/<output_id>")
 def download(output_id: str):
     if not output_id.isalnum():

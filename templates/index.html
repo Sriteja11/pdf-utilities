@@ -3,7 +3,45 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>PDF Combine</title>
+    <title>PDF Combine — Merge PDFs, Convert Images to PDF & Mix Files Free</title>
+    <meta name="description" content="Free online tool to combine PDFs, convert JPG/PNG images into a PDF, or mix PDFs and images in any order. Crop, brighten and adjust photos before saving. No sign-up, no watermarks.">
+    <meta name="keywords" content="combine pdf, merge pdf, pdf combiner, images to pdf, jpg to pdf, png to pdf, mix pdf and images, free pdf tool, online pdf merger">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#217a42">
+    <link rel="canonical" href="{{ request.url_root.rstrip('/') }}{{ request.path }}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="PDF Combine">
+    <meta property="og:title" content="PDF Combine — Merge PDFs, Convert Images to PDF & Mix Files Free">
+    <meta property="og:description" content="Combine PDFs, turn photos into PDF pages, or mix PDFs and images in any order — with a crop tool and brightness/color adjustments. Free, no sign-up.">
+    <meta property="og:url" content="{{ request.url_root.rstrip('/') }}{{ request.path }}">
+    <meta property="og:image" content="{{ request.url_root.rstrip('/') }}/static/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="PDF Combine — Merge PDFs, Convert Images to PDF & Mix Files Free">
+    <meta name="twitter:description" content="Combine PDFs, turn photos into PDF pages, or mix PDFs and images in any order. Free, no sign-up, no watermarks.">
+    <meta name="twitter:image" content="{{ request.url_root.rstrip('/') }}/static/og-image.png">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "PDF Combine",
+      "url": "{{ request.url_root.rstrip('/') }}/",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Any",
+      "description": "Free web tool to combine PDF files, convert images (JPG, PNG, WebP) into a PDF, or mix PDFs and images into one document with reordering, cropping and color adjustments.",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "featureList": [
+        "Merge multiple PDF files in any order",
+        "Convert images (JPG, PNG, WebP, BMP, GIF, TIFF) to PDF",
+        "Mix PDFs and images into one document",
+        "Four-corner crop tool with brightness, contrast and saturation adjustments",
+        "Drag-and-drop page reordering",
+        "No sign-up, no watermarks"
+      ]
+    }
+    </script>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   </head>
   <body>
@@ -83,6 +121,9 @@
       </section>
       <p id="status" class="status" role="status" aria-live="polite"></p>
     </main>
+    <footer class="site-footer">
+      <p><strong>PDF Combine</strong> — free online PDF merger and image-to-PDF converter. Merge PDF files, convert JPG or PNG photos to PDF, or combine PDFs and images into a single document. Works in your browser on Windows, Mac, Linux, Android and iPhone.</p>
+    </footer>
     <script src="{{ url_for('static', filename='app.js') }}"></script>
   </body>
 </html>
