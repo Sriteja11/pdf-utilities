@@ -2,6 +2,10 @@
 
 **Combine multiple PDFs into one, turn photos into PDF pages, or mix PDFs and images in any order** — with drag-and-drop reordering, a four-corner crop tool, and brightness/color adjustments. Run it locally on Windows and everything stays on your machine, or deploy it to Render — see [Privacy & file handling](#privacy--file-handling) for what that means for your documents.
 
+## 🌐 Try it online
+
+**https://pdf-combine-0cf9.onrender.com** — hosted free on Render. No sign-up, no watermarks. (On the free plan the app sleeps after ~15 minutes idle; the first visit may take up to a minute to wake up.)
+
 ## What it can do
 
 The app has four source modes, shown as tabs:
@@ -72,3 +76,5 @@ The included `render.yaml` deploys this project as a Render Web Service. It uses
 3. Open the generated `onrender.com` URL when deployment completes.
 
 The deployed app uses uploads only (PDFs, images, and mixed combining). It intentionally hides the local Windows-folder path feature because a hosted server cannot access a visitor's computer. Uploaded and generated documents are temporary: download the result straight away.
+
+The live instance is available at **https://pdf-combine-0cf9.onrender.com**.
