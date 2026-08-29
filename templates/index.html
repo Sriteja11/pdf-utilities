@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PDF Combine</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header>
+        <p class="eyebrow">LOCAL PDF TOOL</p>
+        <h1>Combine PDFs, your way.</h1>
+        <p class="intro">Combine PDFs, or refine photos with a crop and light adjustments before saving them as one PDF.</p>
+      </header>
+
+      <section class="tabs" aria-label="PDF source">
+        {% if folder_enabled %}
+        <button class="tab active" data-source="folder">Use a folder path</button>
+        {% endif %}
+        <button class="tab {% if not folder_enabled %}active{% endif %}" data-source="upload">Upload PDFs</button>
+        <button class="tab" data-source="images">Images to PDF</button>
+      </section>
+
+      {% if folder_enabled %}
+      <section id="folder-panel" class="source-panel">
+        <label for="folder-path">Windows folder path</label>
+        <div class="path-entry">
+          <input id="folder-path" type="text" placeholder="C:\\Users\\you\\Documents\\PDFs" autocomplete="off">
+          <button id="scan-folder" class="secondary">Find PDFs</button>
+        </div>
+        <p class="hint">Only PDFs directly inside this folder are included. They initially appear in alphabetical order.</p>
+      </section>
+      {% endif %}
+
+      <section id="upload-panel" class="source-panel {% if folder_enabled %}hidden{% endif %}">
+        <label for="file-input">Choose PDFs</label>
+        <label id="drop-zone" class="drop-zone" for="file-input">
+          <strong>Drop PDFs here</strong><span>or click to browse</span>
+        </label>
+        <input id="file-input" type="file" accept="application/pdf,.pdf" multiple>
+      </section>
+
+      <section id="images-panel" class="source-panel hidden">
+        <label for="image-input">Choose photos or images</label>
+        <label id="image-drop-zone" class="drop-zone" for="image-input">
+          <strong>Drop images here</strong><span>JPG, PNG, WebP and more - all processing stays on this computer</span>
+        </label>
+        <input id="image-input" type="file" accept="image/*" multiple>
+        <div id="image-editor" class="image-editor hidden">
+          <div class="image-preview-wrap"><canvas id="image-preview" aria-label="Image crop editor"></canvas><div id="image-placeholder" class="image-placeholder">Your uploaded image will be visible here.</div></div>
+          <div id="image-tools" class="image-tools">
+            <div class="image-nav"><button id="previous-image" class="secondary" type="button">Previous</button><span id="image-position"></span><button id="next-image" class="secondary" type="button">Next</button></div>
+            <p class="crop-help">Drag each green point to trace the four corners of the part you want to keep.</p>
+            <label>Brightness <input id="brightness" type="range" min="50" max="150" value="100"></label>
+            <label>Contrast <input id="contrast" type="range" min="50" max="150" value="100"></label>
+            <label>Saturation <input id="saturation" type="range" min="0" max="200" value="100"></label>
+            <div class="filter-buttons"><button id="grayscale" class="secondary" type="button">B&W</button><button id="sepia" class="secondary" type="button">Warm</button><button id="reset-image" class="text-button" type="button">Reset crop</button><button id="remove-image" class="danger-button" type="button">Remove image</button></div>
+          </div>
+        </div>
+        <div id="image-actions" class="actions hidden"><button id="clear-images" class="text-button" type="button">Clear images</button><button id="images-to-pdf" class="primary" type="button">Save as PDF</button></div>
+      </section>
+
+      <section id="queue-section" class="queue hidden">
+        <div class="queue-heading"><div><h2>Combine order</h2><p>Tick the PDFs to include, then drag items or use the arrows to reorder them.</p></div><span id="file-count"></span></div>
+        <label class="select-all"><input id="select-all" type="checkbox" checked> Select all PDFs</label>
+        <ol id="file-list"></ol>
+        <div class="actions"><button id="clear-list" class="text-button">Clear list</button><button id="combine" class="primary">Combine and download</button></div>
+      </section>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+    </main>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>
