@@ -308,13 +308,16 @@ def robots_txt():
 @app.get("/sitemap.xml")
 def sitemap_xml():
     root = request.url_root.rstrip("/")
+    lastmod = time.strftime("%Y-%m-%d")
     xml = (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-        f"  <url><loc>{root}/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>\n"
+        f"  <url><loc>{root}/</loc><lastmod>{lastmod}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>\n"
         "</urlset>\n"
     )
-    return app.response_class(xml, mimetype="application/xml")
+    response = app.response_class(xml, mimetype="application/xml")
+    response.headers["Cache-Control"] = "public, max-age=3600"
+    return response
 
 
 @app.get("/api/download/<output_id>")
