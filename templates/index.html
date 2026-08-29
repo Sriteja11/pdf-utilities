@@ -19,6 +19,7 @@
         <button class="tab active" data-source="folder">Use a folder path</button>
         {% endif %}
         <button class="tab {% if not folder_enabled %}active{% endif %}" data-source="upload">Upload PDFs</button>
+        <button class="tab" data-source="mixed">Mix PDFs &amp; images</button>
         <button class="tab" data-source="images">Images to PDF</button>
       </section>
 
@@ -59,6 +60,19 @@
           </div>
         </div>
         <div id="image-actions" class="actions hidden"><button id="clear-images" class="text-button" type="button">Clear images</button><button id="images-to-pdf" class="primary" type="button">Save as PDF</button></div>
+      </section>
+
+      <section id="mixed-panel" class="source-panel hidden">
+        <label for="mixed-input">Choose PDFs and images</label>
+        <label id="mixed-drop-zone" class="drop-zone" for="mixed-input">
+          <strong>Drop PDFs and images here</strong><span>Add pages, photos, or scans in any order</span>
+        </label>
+        <input id="mixed-input" type="file" accept="application/pdf,.pdf,image/*" multiple>
+        <div id="mixed-queue" class="queue compact-queue hidden">
+          <div class="queue-heading"><div><h2>Final document order</h2><p>Drag an item, use the arrows, or remove it from the result.</p></div><span id="mixed-count"></span></div>
+          <ol id="mixed-list"></ol>
+          <div class="actions"><button id="clear-mixed" class="text-button" type="button">Clear list</button><button id="mixed-to-pdf" class="primary" type="button">Combine and download</button></div>
+        </div>
       </section>
 
       <section id="queue-section" class="queue hidden">

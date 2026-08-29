@@ -7,6 +7,7 @@ import uuid
 import json
 import os
 import time
+from io import BytesIO
 from pathlib import Path
 from typing import Iterable
 
@@ -67,6 +68,49 @@ def merge_pdfs(paths: Iterable[Path], output: Path) -> None:
             raise ValueError("The selected PDFs contain no pages.")
         with output.open("wb") as file:
             writer.write(file)
+    finally:
+        writer.close()
+
+
+def add_image_page(writer: PdfWriter, image_file) -> None:
+    """Append a raster image as one PDF page to an existing writer."""
+    with Image.open(image_file.stream) as image:
+        source = ImageOps.exif_transpose(image).convert("RGBA")
+        page = Image.new("RGB", source.size, "white")
+        page.paste(source, mask=source.getchannel("A"))
+        try:
+            with BytesIO() as stream:
+                page.save(stream, "PDF", resolution=150.0)
+                stream.seek(0)
+                reader = PdfReader(stream)
+                for pdf_page in reader.pages:
+                    writer.add_page(pdf_page)
+        finally:
+            source.close()
+            page.close()
+
+
+def merge_mixed_files(files: list, output: Path) -> None:
+    """Join uploaded PDF documents and raster images in their received order."""
+    writer = PdfWriter()
+    added = 0
+    try:
+        for file in files:
+            filename = (file.filename or "").lower()
+            if filename.endswith(".pdf"):
+                reader = PdfReader(file.stream)
+                for page in reader.pages:
+                    writer.add_page(page)
+                    added += 1
+            elif file.mimetype.startswith("image/") or filename.endswith((".jpg", ".jpeg", ".png", ".webp", ".bmp", ".gif", ".tiff")):
+                add_image_page(writer, file)
+                added += 1
+            else:
+                raise ValueError(f"Unsupported file type: {file.filename}")
+        if not added:
+            raise ValueError("The selected files contain no pages.")
+        with output.open("wb") as stream:
+            writer.write(stream)
     finally:
         writer.close()
 
@@ -233,6 +277,23 @@ def image_pdf():
         return jsonify(download=f"/api/download/{output_id}")
     except (UnidentifiedImageError, OSError, ValueError) as error:
         return jsonify(error=f"Could not create PDF: {error}"), 400
+
+
+@app.post("/api/mixed-to-pdf")
+def mixed_pdf():
+    files = request.files.getlist("files")
+    if not files:
+        return jsonify(error="Choose one or more PDFs or images."), 400
+    if len(files) > 40:
+        return jsonify(error="Choose up to 40 files at a time."), 400
+    output_id = uuid.uuid4().hex
+    output = OUTPUT_DIR / f"combined-{output_id}.pdf"
+    try:
+        merge_mixed_files(files, output)
+        return jsonify(download=f"/api/download/{output_id}")
+    except (UnidentifiedImageError, OSError, ValueError) as error:
+        output.unlink(missing_ok=True)
+        return jsonify(error=f"Could not combine files: {error}"), 400
 
 
 @app.get("/api/download/<output_id>")

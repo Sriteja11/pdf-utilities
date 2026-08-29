@@ -1,4 +1,4 @@
-const state = { source: document.querySelector('.tab')?.dataset.source || 'upload', files: [], dragIndex: null, images: [], activeImage: 0 };
+const state = { source: document.querySelector('.tab')?.dataset.source || 'upload', files: [], dragIndex: null, images: [], activeImage: 0, mixedFiles: [], mixedDragIndex: null };
 const $ = (selector) => document.querySelector(selector);
 let statusClearTimer;
 const status = (message = '', success = false) => {
@@ -37,7 +37,7 @@ function render() {
   });
 }
 function move(from, to) { if (to < 0 || to >= state.files.length || from === to) return; const [file] = state.files.splice(from, 1); state.files.splice(to, 0, file); render(); }
-function setSource(source) { state.source = source; state.files = []; status(); document.querySelectorAll('.tab').forEach(tab => tab.classList.toggle('active', tab.dataset.source === source)); $('#folder-panel')?.classList.toggle('hidden', source !== 'folder'); $('#upload-panel').classList.toggle('hidden', source !== 'upload'); $('#images-panel').classList.toggle('hidden', source !== 'images'); render(); if (source === 'images') renderImage(); }
+function setSource(source) { state.source = source; state.files = []; status(); document.querySelectorAll('.tab').forEach(tab => tab.classList.toggle('active', tab.dataset.source === source)); $('#folder-panel')?.classList.toggle('hidden', source !== 'folder'); $('#upload-panel').classList.toggle('hidden', source !== 'upload'); $('#mixed-panel').classList.toggle('hidden', source !== 'mixed'); $('#images-panel').classList.toggle('hidden', source !== 'images'); render(); if (source === 'images') renderImage(); }
 
 document.querySelectorAll('.tab').forEach(tab => tab.onclick = () => setSource(tab.dataset.source));
 const scanFolder = $('#scan-folder'); if (scanFolder) scanFolder.onclick = async () => { const folder = $('#folder-path').value.trim(); status(); if (!folder) return status('Enter a Windows folder path.'); try { const response = await fetch('/api/folder-pdfs', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({folder})}); const data = await response.json(); if (!response.ok) throw new Error(data.error); state.files = data.files; render(); status(data.files.length ? '' : 'No PDFs were found in that folder.'); } catch (error) { status(error.message); } };
@@ -105,3 +105,26 @@ $('#remove-image').onclick = () => { const removed = currentImage(); if (!remove
 $('#image-input').onchange = event => addImages(event.target.files); const imageDrop = $('#image-drop-zone'); ['dragenter','dragover'].forEach(type => imageDrop.addEventListener(type, event => { event.preventDefault(); imageDrop.classList.add('dragover'); })); ['dragleave','drop'].forEach(type => imageDrop.addEventListener(type, event => { event.preventDefault(); imageDrop.classList.remove('dragover'); })); imageDrop.addEventListener('drop', event => addImages(event.dataTransfer.files));
 $('#clear-images').onclick = () => { state.images.forEach(image => URL.revokeObjectURL(image.url)); state.images = []; state.activeImage = 0; renderImage(); status(); };
 $('#images-to-pdf').onclick = async () => { if (!state.images.length) return; const button = $('#images-to-pdf'); button.disabled = true; status('Creating your PDF…'); try { const form = new FormData(); state.images.forEach(image => form.append('images', image.file, image.file.name)); form.append('edits', JSON.stringify(state.images.map(({points, brightness, contrast, saturation, grayscale, sepia}) => ({points, brightness, contrast, saturation, grayscale, sepia})))); const response = await fetch('/api/images-to-pdf', {method:'POST', body:form}); const data = await response.json(); if (!response.ok) throw new Error(data.error); window.location.assign(data.download); status('Your image PDF is downloading.', true); } catch (error) { status(error.message); } finally { button.disabled = false; } };
+
+function isMixedFile(file) { return file.type === 'application/pdf' || file.type.startsWith('image/') || file.name.toLowerCase().endsWith('.pdf'); }
+function mixedFileType(file) { return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf') ? 'PDF' : 'IMAGE'; }
+function moveMixed(from, to) { if (to < 0 || to >= state.mixedFiles.length || from === to) return; const [file] = state.mixedFiles.splice(from, 1); state.mixedFiles.splice(to, 0, file); renderMixed(); }
+function renderMixed() {
+  $('#mixed-queue').classList.toggle('hidden', !state.mixedFiles.length); $('#mixed-count').textContent = `${state.mixedFiles.length} file${state.mixedFiles.length === 1 ? '' : 's'}`; $('#mixed-list').innerHTML = '';
+  state.mixedFiles.forEach((file, index) => {
+    const row = document.createElement('li'); row.draggable = true; const order = document.createElement('span'); order.className = 'order'; order.textContent = index + 1;
+    const kind = document.createElement('span'); kind.className = `file-kind ${mixedFileType(file).toLowerCase()}`; kind.textContent = mixedFileType(file);
+    const name = document.createElement('span'); name.className = 'file-name'; name.title = file.name; name.textContent = file.name;
+    const size = document.createElement('span'); size.className = 'order'; size.textContent = bytes(file.size);
+    const up = document.createElement('button'); up.className = 'move'; up.textContent = '↑'; up.disabled = index === 0; up.setAttribute('aria-label', `Move ${file.name} up`);
+    const down = document.createElement('button'); down.className = 'move'; down.textContent = '↓'; down.disabled = index === state.mixedFiles.length - 1; down.setAttribute('aria-label', `Move ${file.name} down`);
+    const remove = document.createElement('button'); remove.className = 'remove-item'; remove.textContent = 'Remove'; remove.setAttribute('aria-label', `Remove ${file.name}`);
+    up.onclick = () => moveMixed(index, index - 1); down.onclick = () => moveMixed(index, index + 1); remove.onclick = () => { state.mixedFiles.splice(index, 1); renderMixed(); };
+    row.ondragstart = () => { state.mixedDragIndex = index; row.classList.add('dragging'); }; row.ondragend = () => { state.mixedDragIndex = null; row.classList.remove('dragging'); }; row.ondragover = event => event.preventDefault(); row.ondrop = event => { event.preventDefault(); if (state.mixedDragIndex !== null) moveMixed(state.mixedDragIndex, index); };
+    row.append(order, kind, name, size, up, down, remove); $('#mixed-list').append(row);
+  });
+}
+function addMixed(files) { const chosen = [...files].filter(isMixedFile); if (!chosen.length) return status('Choose PDFs or image files.'); state.mixedFiles.push(...chosen); renderMixed(); status(); }
+$('#mixed-input').onchange = event => { addMixed(event.target.files); event.target.value = ''; }; const mixedDrop = $('#mixed-drop-zone'); ['dragenter','dragover'].forEach(type => mixedDrop.addEventListener(type, event => { event.preventDefault(); mixedDrop.classList.add('dragover'); })); ['dragleave','drop'].forEach(type => mixedDrop.addEventListener(type, event => { event.preventDefault(); mixedDrop.classList.remove('dragover'); })); mixedDrop.addEventListener('drop', event => addMixed(event.dataTransfer.files));
+$('#clear-mixed').onclick = () => { state.mixedFiles = []; renderMixed(); status(); };
+$('#mixed-to-pdf').onclick = async () => { if (!state.mixedFiles.length) return status('Add at least one PDF or image.'); const button = $('#mixed-to-pdf'); button.disabled = true; status('Combining files…'); try { const form = new FormData(); state.mixedFiles.forEach(file => form.append('files', file, file.name)); const response = await fetch('/api/mixed-to-pdf', {method:'POST', body:form}); const data = await response.json(); if (!response.ok) throw new Error(data.error); window.location.assign(data.download); status('Your combined PDF is downloading.', true); } catch (error) { status(error.message); } finally { button.disabled = false; } };
