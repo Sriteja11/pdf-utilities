@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: pdf-combine
+    runtime: python
+    plan: free
+    buildCommand: uv sync --frozen
+    startCommand: uv run gunicorn --workers 1 --bind 0.0.0.0:$PORT app:app
+    autoDeployTrigger: commit
+    envVars:
+      - key: ALLOW_FOLDER_PATHS
+        value: "false"
